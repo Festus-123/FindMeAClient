@@ -88,7 +88,7 @@ export default async function AdPage({ params }: { params: Promise<{ id: string 
             You applied. Replies will show up in your <Link href="/inbox" className="underline">inbox</Link>.
           </p>
         ) : user && !can(user, "ad.apply") ? (
-          <p className="text-sm font-semibold text-muted">Admin accounts can't apply to ads.</p>
+          <p className="text-sm font-semibold text-muted">Admin accounts can&apos;t apply to ads.</p>
         ) : ad.applyMethod && ad.applyMethod !== "inbox" && ad.applyValue ? (
           <ApplyExternal adId={ad.id} method={ad.applyMethod} value={ad.applyValue} allowed={can(user, "ad.apply")} />
         ) : (

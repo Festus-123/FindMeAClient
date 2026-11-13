@@ -1,0 +1,36 @@
+Find My Client 
+
+pitch: 
+A websiewhere client comes in to find potential personel for work 
+
+a client comes creates an ad and then put it up -- the ad stays up for 24 hrs minimum, 
+client can choose to let the ad stay up for up to 48 to 96 hrs (but that would cost extra charg)
+putting up an ad cost money and multiple ads adds up to the charges
+
+after an ad set up a client has a notification box to see those that apply or clicked or view
+more of like a stats and the message section for messages or response to ad
+
+so basically a client comes set up an ad (for a job or a role or a service) --
+    the system algorithm is designed to carry each ad to all users at least once but not 
+    maximum of 1 within the space it was up.
+once a user interested in a particular ad sees it in their feed (the views count would increase on the client end )
+if they cose torespond to it the message or response would be sent to the client and be available withing the time 
+the ad is still up 
+
+to prevent a client from creating mltiple ad so many time the charge would be exponent 
+an add could be more of a job role so when user is creating an ad the details 
+that would be asked for should cover each nexxessary. 
+
+not all client would need the same details in their ad so client could add the ones they need 
+
+the employee
+visits the site and sees his feed with ads (role for web dev, farmer, photographer etc)
+finds the one he needs and then apply. he never gets late on an ad. cause any ad that shos on his feed is recent 
+
+user als can click to follow a certain type of ad and also get notified if such ad comes up. when they open the site they can click their notify
+or meesage box to check if hey got a respnse or ave been notified bout a thig or 2
+
+rules 
+once an ad times out it won't be deleted for about 5 days and client who create ad could be asked wheather they want to 
+restore the ad or not. if they choose yes charges apply and if they say no. the ad is deleted on their confirmation
+

@@ -1,0 +1,14 @@
+no landing page anything, no about me and the likes just straigth up the page 
+
+use gets to see the page and the detil befor choosing to register. if they attempt 
+some certain action they should be prompted to register 
+
+the add shoul be like setting up an seo.. clients get to set keywords to let their ads rank high 
+
+a leaderboard showing most view ad that day most visited and all leaderboard of 5
+
+user can share ad to other platforms or evn apps 
+
+if client set ad as adoptable.. users can download image and the likes 
+
+2 or 3 peple can host an ad together 

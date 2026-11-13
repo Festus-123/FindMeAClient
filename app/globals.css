@@ -1,0 +1,245 @@
+@import "tailwindcss";
+
+/* Find Me A Client theme: red, blue, green and ink on paper (the logo: Find, Me, A, Client). Flat, square, no shadows or gradients. */
+:root {
+  --blue: #1a56ff;
+  --red: #ef2b2b;
+  --red-soft: #ffe9e9;
+  --green: #12a150;
+  --green-soft: #e3f6ec;
+  --paper: #ffffff;
+  --ink: #0b0f1e;
+  --on-ink: #ffffff;
+  --muted: #5b6585;
+  --surface: #f3f4f8;
+  --surface-2: #e8eaf1;
+  --line: #d9dce8;
+  --accent: #ef2b2b;
+  --placeholder: #98a1bd;
+}
+
+:root[data-theme="dark"] {
+  --blue: #5b84ff;
+  --red: #ff5252;
+  --red-soft: #3a1618;
+  --green: #2fd17a;
+  --green-soft: #11301f;
+  --paper: #0b0f1e;
+  --ink: #f3f5fb;
+  --on-ink: #0b0f1e;
+  --muted: #9aa3c2;
+  --surface: #151a2e;
+  --surface-2: #1e2540;
+  --line: #2a3254;
+  --accent: #ff5252;
+  --placeholder: #6b7496;
+}
+
+@theme inline {
+  --color-blue: var(--blue);
+  --color-red: var(--red);
+  --color-red-soft: var(--red-soft);
+  --color-green: var(--green);
+  --color-green-soft: var(--green-soft);
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-on-ink: var(--on-ink);
+  --color-muted: var(--muted);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --font-sans: var(--font-montserrat), system-ui, sans-serif;
+}
+
+html {
+  background: var(--paper);
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-montserrat), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Smooth light/dark switch: only while the class is present (set by the toggle), so page loads never animate. */
+html.theme-fade,
+html.theme-fade *,
+html.theme-fade *::before,
+html.theme-fade *::after {
+  transition: background-color 350ms ease, color 350ms ease, border-color 350ms ease, fill 350ms ease !important;
+}
+
+::selection {
+  background: var(--red);
+  color: #fff;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+input,
+textarea,
+select {
+  outline: none;
+}
+
+.field {
+  width: 100%;
+  background: var(--surface);
+  border: 2px solid transparent;
+  border-radius: 0;
+  padding: 0.8rem 1rem;
+  font-size: 0.95rem;
+  color: var(--ink);
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+.field:focus {
+  border-color: var(--ink);
+  background: var(--paper);
+}
+.field::placeholder {
+  color: var(--placeholder);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0;
+  padding: 0.75rem 1.25rem;
+  font-weight: 800;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: opacity 150ms ease, background-color 150ms ease, color 150ms ease, transform 150ms ease;
+  cursor: pointer;
+}
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+/* Primary action: solid ink (was bright blue). Class names kept so every page picks it up. */
+.btn-blue,
+.btn-solid {
+  background: var(--ink);
+  color: var(--on-ink);
+}
+.btn-blue:hover:not(:disabled),
+.btn-solid:hover:not(:disabled) {
+  background: var(--accent);
+  color: #fff;
+}
+.btn-soft {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+.btn-soft:hover:not(:disabled) {
+  background: var(--red);
+  color: #fff;
+}
+.btn-red {
+  background: var(--red);
+  color: #fff;
+}
+.btn-red:hover:not(:disabled) {
+  opacity: 0.9;
+}
+.btn-green {
+  background: var(--green);
+  color: #fff;
+}
+
+.card {
+  background: var(--surface);
+  border-radius: 0;
+  padding: 1.25rem;
+  transition: background-color 150ms ease, transform 200ms ease;
+}
+.card-hover:hover {
+  background: var(--red-soft);
+}
+
+/* Ad tiles lift slightly and the photo zooms in on hover. */
+.tile {
+  transition: transform 200ms ease, background-color 150ms ease;
+}
+.tile:hover {
+  background: var(--red-soft);
+  transform: translateY(-3px);
+}
+.tile img {
+  transition: transform 500ms ease;
+}
+.tile:hover img {
+  transform: scale(1.05);
+}
+
+/* Scrolling ticker for the hero strip. */
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 40s linear infinite;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.fade-in {
+  animation: fade-in 260ms ease-out both;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--surface-2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 800ms linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .fade-in,
+  .spinner,
+  .marquee {
+    animation: none;
+  }
+  .tile,
+  .tile img {
+    transition: none;
+  }
+}
+
+/* Theme toggle icons: show the one you would switch to. */
+:root[data-theme="dark"] .theme-moon,
+:root:not([data-theme="dark"]) .theme-sun {
+  display: none;
+}

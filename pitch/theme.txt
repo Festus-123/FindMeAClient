@@ -1,0 +1,10 @@
+color brigth red, blue and green, white
+font montserrat
+shadow: none
+sharp borders: none, or when crutially needed
+gradient pop button: none
+error message and drop down custom components 
+loading, error and notfound page: true 
+animation: vry miniml
+smoothness (eg scroll pop in and ou etc): true 
+

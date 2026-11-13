@@ -1,0 +1,191 @@
+SETTING UP MONNIFY FOR FIND ME A CLIENT (step by step)
+=======================================================
+
+Monnify (by Moniepoint) is the Nigerian payment gateway we will use to take naira payments:
+  - ad payments            (first ad free, then 1,000 and doubling per cause, max 4 per cause)
+  - ad restores            (40% of what the ad cost)
+  - monthly subscription   (1,000 naira, gives the badge)
+
+How it works in this project today
+  - lib/payments.ts has a "provider boundary": createPayment() makes a pending payment,
+    markPaid(ref) confirms it (safe to call twice).
+  - app/pay/[ref]/page.tsx shows the amount and a "Pay (test mode)" button.
+  - app/actions/pay.ts -> confirmTestPayment() marks it paid, then activates the ad
+    or extends the subscription.
+  Going live means: replace the test button with a Monnify checkout, and let a Monnify
+  WEBHOOK (not the browser) do the "mark paid + fulfil" step.
+
+IMPORTANT: confirm the exact endpoints and field names against Monnify's own docs
+(https://developers.monnify.com) while you build. This guide is the plan; the docs are the truth.
+
+
+PART A. ACCOUNT AND KEYS (sandbox first, no real money)
+-------------------------------------------------------
+1. Create a Monnify account at https://app.monnify.com/register (business account).
+2. Switch to the SANDBOX dashboard (https://sandbox.monnify.com) and sign in. Everything below
+   happens in sandbox until Part F.
+3. In the sandbox dashboard open  Settings -> API Keys & Contracts  (wording may vary slightly).
+   Copy these three values:
+      - API Key
+      - Secret Key
+      - Contract Code
+4. Put them in .env.local (never commit this file, .env* is already git-ignored):
+
+      MONNIFY_BASE_URL=https://sandbox.monnify.com
+      MONNIFY_API_KEY=MK_TEST_xxxxxxxxxx
+      MONNIFY_SECRET_KEY=xxxxxxxxxxxxxxxx
+      MONNIFY_CONTRACT_CODE=xxxxxxxxxx
+      APP_URL=http://localhost:3000
+
+   Also add the same names (without values) to .env.example so the next person knows what is needed.
+5. Restart `npm run dev` after editing env files.
+
+
+PART B. BUILD THE CHECKOUT (server side only)
+---------------------------------------------
+Keep every Monnify call on the server. The secret key must never reach the browser.
+
+1. Create lib/monnify.ts (import "server-only") with:
+
+   a) getToken()
+        POST {MONNIFY_BASE_URL}/api/v1/auth/login
+        Header: Authorization: Basic base64("API_KEY:SECRET_KEY")
+        Response: responseBody.accessToken (valid about 1 hour; cache it in memory and refresh early).
+
+   b) initTransaction(payment, user)
+        POST {MONNIFY_BASE_URL}/api/v1/merchant/transactions/init-transaction
+        Header: Authorization: Bearer <accessToken>
+        Body (JSON):
+          amount              payment.amount            (naira, a number)
+          customerName        user.name
+          customerEmail       user.email
+          paymentReference    payment.ref               (our "fmc_..." reference, unique per attempt)
+          paymentDescription  "Find Me A Client: put your ad up" (or restore / subscription)
+          currencyCode        "NGN"
+          contractCode        MONNIFY_CONTRACT_CODE
+          redirectUrl         {APP_URL}/pay/{payment.ref}/done
+          paymentMethods      ["CARD", "ACCOUNT_TRANSFER"]   (optional)
+        Response: responseBody.checkoutUrl and responseBody.transactionReference.
+        Save transactionReference on the payment record (add an optional field to the Payment type).
+
+   c) verifyTransaction(transactionReference)
+        GET {MONNIFY_BASE_URL}/api/v2/transactions/{encodeURIComponent(transactionReference)}
+        Use it to double-check a payment before fulfilling it (status PAID, amount matches).
+
+2. In lib/payments.ts change the provider from "Test mode" to Monnify:
+      export const provider = { name: "Monnify", simulated: false };
+   Keep a simple switch (for example MONNIFY_API_KEY missing => test mode) so local work still
+   runs without keys. The test button must stay disabled in production.
+
+3. Move the fulfilment out of confirmTestPayment() into one shared function, for example
+   fulfilPayment(payment) in lib/payments.ts:
+        - kind "ad" or "restore"  -> activateAd(ad)
+        - kind "subscription"     -> extend user.subscribedUntil by SUBSCRIPTION_DAYS
+   Both the test button and the webhook call it. It must only run when markPaid() returns the payment
+   (that makes retries harmless).
+
+4. Change app/pay/[ref]/page.tsx: the "Pay" button becomes a server action that
+     - calls initTransaction() for this payment,
+     - redirect()s the customer to the returned checkoutUrl.
+   Only the person who owns the payment may start it (the page already checks this).
+
+5. Add the return page app/pay/[ref]/done/page.tsx. Monnify sends the customer back here after
+   checkout. It must NOT mark anything paid by itself. It only:
+     - looks the payment up and, if still pending, calls verifyTransaction() once,
+     - shows "Payment received" or "We're confirming your payment, this can take a minute".
+
+
+PART C. THE WEBHOOK (this is what really marks a payment paid)
+--------------------------------------------------------------
+Customers close tabs and lose connection, so the redirect alone is not reliable. Monnify calls our
+server directly when money lands.
+
+1. Create app/api/monnify/webhook/route.ts with a POST handler:
+     a) Read the RAW body text first (await req.text()), do not parse it yet.
+     b) Compute HMAC SHA-512 of that raw text using MONNIFY_SECRET_KEY, hex encoded.
+     c) Compare it, in constant time, with the "monnify-signature" request header.
+        Mismatch -> return 401 and do nothing.
+     d) Parse the JSON. Handle eventType "SUCCESSFUL_TRANSACTION" only (ignore the rest, still return 200).
+     e) Find our payment by eventData.paymentReference.
+     f) Check eventData.paymentStatus is "PAID" and that the amount paid is at least payment.amount.
+        Optionally also call verifyTransaction() as a second check.
+     g) markPaid(ref) and, if it returned the payment, run fulfilPayment(payment).
+     h) Return 200 quickly. Monnify retries on errors, so the handler must be idempotent
+        (markPaid already is).
+
+2. Check proxy.ts: the webhook route must be reachable by anonymous POST requests (no login cookie,
+   no redirects). Exclude /api/monnify/webhook from any guard there.
+
+3. Never trust the amount or status that arrives from the browser. Only the verified webhook
+   (or verifyTransaction) may change a payment to paid.
+
+
+PART D. TEST IT LOCALLY IN SANDBOX
+----------------------------------
+Monnify cannot reach http://localhost, so give your machine a public address while testing:
+1. Install a tunnel, for example:   npx ngrok http 3000     (or Cloudflare Tunnel)
+   You get a URL like https://abcd-12-34.ngrok-free.app
+2. In the SANDBOX dashboard open  Settings -> Developer (Webhook URLs) and set
+      Transaction completion URL = https://abcd-12-34.ngrok-free.app/api/monnify/webhook
+   Update APP_URL in .env.local to the same tunnel URL and restart the dev server.
+3. Sign in as a client (sample: brightwave@sample.test / Sample123!) and create an ad that costs money
+   (any ad after the first free one, or pick a longer runtime).
+4. Press Pay. You land on Monnify's sandbox checkout. Use Monnify's sandbox test card or bank
+   transfer details (shown in their sandbox docs / on the checkout page).
+5. Confirm all of this happens:
+     - the webhook shows in the dev server log and returns 200,
+     - the payment becomes "paid",
+     - the ad goes live and shows on the home feed,
+     - the return page says the payment was received.
+6. Also test the unhappy paths:
+     - close the tab after paying (the webhook must still activate the ad),
+     - replay the same webhook twice (the ad must be activated only once),
+     - send a webhook with a wrong signature (must get 401, nothing changes),
+     - pay less than the amount (must not activate),
+     - subscription and restore payments.
+
+
+PART E. BEFORE GOING TO PRODUCTION
+----------------------------------
+1. DATABASE. The app currently keeps a live copy of the data in memory and writes it through to
+   Neon (lib/db.ts). That is fine for one running server, but on a serverless host (several
+   instances) a webhook may hit an instance that has stale data. Before launch, change the payment
+   and ad reads and writes to run as real SQL queries (or run the app as a single long-lived
+   server). Do this before real money flows.
+2. UPLOADS. Uploaded flyers are saved to the local disk (data/uploads). Move them to object storage
+   (for example S3, Cloudflare R2 or Vercel Blob) or they will vanish on most hosts.
+3. SESSION_SECRET. Set a long random value in the production environment.
+4. Switch the test database to the real one: set DATABASE_URL in production (the app prefers it).
+5. Remove or keep disabled the "Test mode" payment button in production (it already refuses to run
+   when NODE_ENV is production).
+
+
+PART F. GO LIVE ON MONNIFY
+--------------------------
+1. In the live dashboard (https://app.monnify.com) complete business verification (KYC):
+   business registration documents, director ID, settlement bank account. Approval can take days.
+2. When approved, open the LIVE dashboard, copy the live API Key, Secret Key and Contract Code.
+3. Set these in your hosting provider's environment variables (not in git):
+      MONNIFY_BASE_URL=https://api.monnify.com
+      MONNIFY_API_KEY=<live key>
+      MONNIFY_SECRET_KEY=<live secret>
+      MONNIFY_CONTRACT_CODE=<live contract code>
+      APP_URL=https://your-real-domain.com
+4. In the LIVE dashboard set the webhook URL to
+      https://your-real-domain.com/api/monnify/webhook
+5. Make one real payment of the smallest amount (1,000 naira subscription), confirm the whole flow,
+   and check the money in your Monnify wallet / settlement account.
+6. Watch the first days of webhook logs. Keep the Monnify dashboard transaction list open to compare.
+
+
+QUICK CHECKLIST
+---------------
+[ ] sandbox keys + contract code in .env.local
+[ ] lib/monnify.ts (token, init, verify)
+[ ] provider switched, fulfilPayment() shared
+[ ] pay page redirects to Monnify checkout
+[ ] return page /pay/[ref]/done (verify only, never marks paid on its own)
+[ ] webhook route with signature check, amount check, idempotent
+[ ] tunnel + sandbox webhook URL, full test incl. failure cases
+[ ] SQL-based storage + object storage for uploads
+[ ] KYC approved, live keys set, live webhook URL set, one real payment verified

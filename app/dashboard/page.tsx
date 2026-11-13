@@ -132,9 +132,9 @@ function AdList({ title, icon, ads, empty }: { title: string; icon: IconName; ad
         <p className="text-sm text-muted">{empty}</p>
       ) : (
         ads.map((ad) => (
-          <Link key={ad.id} href={`/dashboard/ads/${ad.id}`} className="card flex flex-wrap items-center gap-3 hover:bg-red-soft">
+          <Link key={ad.id} href={`/dashboard/ads/${ad.id}`} className="card group flex flex-wrap items-center gap-3">
             <div className="min-w-0 flex-1">
-              <p className="truncate font-extrabold">{ad.title}</p>
+              <p className="truncate font-extrabold group-hover:text-accent">{ad.title}</p>
               <p className="text-xs font-semibold text-muted">
                 {ad.status === "live" ? timeLeft(ad.expiresAt) : "Not live yet"} · {ad.category}
               </p>
@@ -210,8 +210,8 @@ function Applications({ userId }: { userId: string }) {
   return (
     <>
       {threads.map((t) => (
-        <Link key={t.id} href="/inbox" className="card flex items-center gap-3 hover:bg-red-soft">
-          <span className="min-w-0 flex-1 truncate font-bold">{t.adTitle}</span>
+        <Link key={t.id} href="/inbox" className="card group flex items-center gap-3">
+          <span className="min-w-0 flex-1 truncate font-bold group-hover:text-accent">{t.adTitle}</span>
           <span className="text-xs font-semibold text-muted">
             {t.messages.length > 1 ? `${t.messages.length - 1} repl${t.messages.length === 2 ? "y" : "ies"}` : "Awaiting reply"}
           </span>

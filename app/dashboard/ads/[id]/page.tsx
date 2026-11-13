@@ -87,8 +87,8 @@ export default async function ManageAdPage({ params }: { params: Promise<{ id: s
           <p className="text-sm text-muted">No one has responded yet.</p>
         ) : (
           threads.map((t) => (
-            <Link key={t.id} href="/inbox" className="card block hover:bg-red-soft">
-              <p className="font-bold">{findUser(t.applicantId)?.name ?? "Applicant"}</p>
+            <Link key={t.id} href="/inbox" className="card group block">
+              <p className="font-bold group-hover:text-accent">{findUser(t.applicantId)?.name ?? "Applicant"}</p>
               <p className="line-clamp-2 text-sm text-muted">{t.messages[0]?.text}</p>
               <p className="mt-1 text-xs font-semibold text-muted">{ago(t.updatedAt)}</p>
             </Link>

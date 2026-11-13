@@ -42,6 +42,7 @@ async function pgConnect(): Promise<DB | null> {
   await pool.query(
     "create table if not exists fmc_rows (kind text not null, id text not null, data jsonb not null, primary key (kind, id))",
   );
+  await pool.query("create table if not exists fmc_files (name text primary key, type text not null, data bytea not null)");
   const { rows } = await pool.query<{ kind: Kind; id: string; data: Record<string, unknown> }>("select kind, id, data from fmc_rows");
   g.__fmcPg = pg;
   if (rows.length === 0) return null;
@@ -93,7 +94,16 @@ function pgSave(store: DB) {
 }
 
 // Top-level await: connect and load once per server process (not again on hot reloads).
-const remote = !g.__fmcDb && PG_URL ? await pgConnect() : null;
+// In development an unreachable database (offline, DNS failure, paused Neon project) falls back to the
+// local JSON file instead of crashing every page. In production the error still surfaces.
+const remote =
+  !g.__fmcDb && PG_URL
+    ? await pgConnect().catch((e) => {
+        if (process.env.NODE_ENV === "production") throw e;
+        console.warn("[db] Postgres unreachable, using local data/db.json instead:", (e as Error).message);
+        return null;
+      })
+    : null;
 
 function empty(): DB {
   return { users: [], ads: [], threads: [], notifications: [], payments: [] };
@@ -128,11 +138,10 @@ function seedAdmin(db: DB) {
 }
 
 function load(): DB {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
   let db = empty();
   if (remote) {
     db = { ...empty(), ...remote };
-  } else if (fs.existsSync(DB_FILE)) {
+  } else if (!g.__fmcPg && fs.existsSync(DB_FILE)) {
     try {
       db = { ...empty(), ...JSON.parse(fs.readFileSync(DB_FILE, "utf8")) };
     } catch {
@@ -148,10 +157,76 @@ function load(): DB {
 export function save() {
   if (!g.__fmcDb) return;
   if (g.__fmcPg) return pgSave(g.__fmcDb);
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-  const tmp = `${DB_FILE}.tmp`;
-  fs.writeFileSync(tmp, JSON.stringify(g.__fmcDb));
-  fs.renameSync(tmp, DB_FILE);
+  try {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    const tmp = `${DB_FILE}.tmp`;
+    fs.writeFileSync(tmp, JSON.stringify(g.__fmcDb));
+    fs.renameSync(tmp, DB_FILE);
+  } catch (e) {
+    // Read-only hosts (serverless) cannot keep a file; set a database URL there.
+    console.error("[db] could not write data/db.json (set TEST_DATABASE_URL or DATABASE_URL on this host):", e);
+  }
+}
+
+let syncing: Promise<void> | null = null;
+
+/**
+ * Serverless hosts run several copies of the app, each with its own in-memory data. Before a request
+ * reads anything, pull the latest rows from Postgres so every copy sees the same data. A no-op locally.
+ */
+export function syncDb(): Promise<void> {
+  const pg = g.__fmcPg;
+  if (!pg || !g.__fmcDb || process.env.NODE_ENV !== "production") return Promise.resolve();
+  syncing ??= (async () => {
+    try {
+      await pg.chain; // let this copy's own pending writes land first
+      const { rows } = await pg.pool.query<{ kind: Kind; id: string; data: Record<string, unknown> }>("select kind, id, data from fmc_rows");
+      const fresh = empty();
+      const written = new Map<string, string>();
+      for (const r of rows) {
+        (fresh[r.kind] as unknown[]).push(r.data);
+        written.set(`${r.kind}:${r.id}`, JSON.stringify(r.data));
+      }
+      g.__fmcDb = fresh;
+      pg.written = written;
+    } catch (e) {
+      console.error("[db] could not refresh from Postgres:", e);
+    } finally {
+      syncing = null;
+    }
+  })();
+  return syncing;
+}
+
+/** Uploaded images: in Postgres when it is configured (hosts have no writable disk), else on disk. */
+export async function storeUpload(name: string, type: string, bytes: Buffer): Promise<void> {
+  if (g.__fmcPg) {
+    await g.__fmcPg.pool.query(
+      "insert into fmc_files (name, type, data) values ($1, $2, $3) on conflict (name) do update set type = excluded.type, data = excluded.data",
+      [name, type, bytes],
+    );
+    return;
+  }
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+  fs.writeFileSync(path.join(/*turbopackIgnore: true*/ UPLOAD_DIR, name), bytes);
+}
+
+export async function readUpload(name: string): Promise<Buffer | null> {
+  if (g.__fmcPg) {
+    const { rows } = await g.__fmcPg.pool.query<{ data: Buffer }>("select data from fmc_files where name = $1", [name]);
+    return rows[0]?.data ?? null;
+  }
+  const file = path.join(/*turbopackIgnore: true*/ UPLOAD_DIR, name);
+  return fs.existsSync(file) ? fs.readFileSync(file) : null;
+}
+
+export async function removeUpload(name: string): Promise<void> {
+  try {
+    if (g.__fmcPg) await g.__fmcPg.pool.query("delete from fmc_files where name = $1", [name]);
+    else fs.rmSync(path.join(/*turbopackIgnore: true*/ UPLOAD_DIR, name), { force: true });
+  } catch {
+    // A leftover image is harmless.
+  }
 }
 
 /** Moves expired ads to "expired" and purges ads that outlived their 5-day grace. */

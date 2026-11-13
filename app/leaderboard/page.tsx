@@ -73,10 +73,10 @@ function AdBoard({
         <ol className="space-y-2">
           {rows.map(({ ad, count }, i) => (
             <li key={ad.id}>
-              <Link href={`/ads/${ad.id}`} className="card flex items-center gap-3 !py-3 hover:bg-red-soft">
+              <Link href={`/ads/${ad.id}`} className="card group flex items-center gap-3 !py-3">
                 <Rank n={i + 1} />
-                <span className="min-w-0 flex-1 truncate font-bold">{ad.title}</span>
-                <span className="text-sm font-extrabold">{count}</span>
+                <span className="min-w-0 flex-1 truncate font-bold group-hover:text-accent">{ad.title}</span>
+                <span className="text-sm font-extrabold group-hover:text-accent">{count}</span>
               </Link>
             </li>
           ))}

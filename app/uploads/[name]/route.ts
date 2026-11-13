@@ -1,8 +1,6 @@
-import fs from "node:fs";
-import path from "node:path";
 import { NextRequest } from "next/server";
 import { getUser } from "@/lib/auth";
-import { db, UPLOAD_DIR } from "@/lib/db";
+import { db, readUpload, syncDb } from "@/lib/db";
 import { can } from "@/lib/permissions";
 
 const TYPES: Record<string, string> = { png: "image/png", jpg: "image/jpeg", webp: "image/webp" };
@@ -12,6 +10,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ name: strin
   // Only our generated names: uuid + known extension. Blocks any path traversal.
   if (!/^[0-9a-f-]{36}\.(png|jpg|webp)$/.test(name)) return new Response("Not found", { status: 404 });
 
+  await syncDb();
   const ad = db().ads.find((a) => a.image === name);
   if (!ad) return new Response("Not found", { status: 404 });
 
@@ -22,8 +21,8 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ name: strin
     if (!ad.adoptable || !can(user, "ad.download")) return new Response("Forbidden", { status: 403 });
   }
 
-  const file = path.join(/*turbopackIgnore: true*/ UPLOAD_DIR, name);
-  if (!fs.existsSync(file)) return new Response("Not found", { status: 404 });
+  const bytes = await readUpload(name);
+  if (!bytes) return new Response("Not found", { status: 404 });
 
   const headers: Record<string, string> = {
     "Content-Type": TYPES[name.split(".").pop() as string],
@@ -31,5 +30,5 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ name: strin
     "X-Content-Type-Options": "nosniff",
   };
   if (download) headers["Content-Disposition"] = `attachment; filename="${ad.title.replace(/[^\w.-]+/g, "_").slice(0, 40)}.${name.split(".").pop()}"`;
-  return new Response(fs.readFileSync(file), { headers });
+  return new Response(new Uint8Array(bytes), { headers });
 }

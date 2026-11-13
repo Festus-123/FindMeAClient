@@ -83,7 +83,7 @@ export default async function InboxPage() {
           <ul className="space-y-2">
             {notifications.map((n) => (
               <li key={n.id}>
-                <Link href={n.href} className={`block  px-4 py-3 text-sm font-semibold transition-colors duration-150 hover:bg-red-soft ${n.read ? "bg-surface text-muted" : "bg-surface-2 text-ink"}`}>
+                <Link href={n.href} className={`block  px-4 py-3 text-sm font-semibold transition-colors duration-150 hover:text-accent ${n.read ? "bg-surface text-muted" : "bg-surface-2 text-ink"}`}>
                   {n.text}
                   <span className="block text-xs font-medium text-muted">{ago(n.at)}</span>
                 </Link>

@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import { createSession, destroySession } from "@/lib/auth";
-import { db, hashPassword, save, uid } from "@/lib/db";
+import { db, hashPassword, save, syncDb, uid } from "@/lib/db";
 
 export interface FormState {
   error?: string;
@@ -20,6 +20,7 @@ function safeNext(value: FormDataEntryValue | null): string {
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function register(_prev: FormState, formData: FormData): Promise<FormState> {
+  await syncDb();
   const name = String(formData.get("name") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
@@ -56,6 +57,7 @@ export async function register(_prev: FormState, formData: FormData): Promise<Fo
 }
 
 export async function login(_prev: FormState, formData: FormData): Promise<FormState> {
+  await syncDb();
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
   const user = db().users.find((u) => u.email === email);

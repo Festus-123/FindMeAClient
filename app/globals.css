@@ -164,8 +164,9 @@ select {
   padding: 1.25rem;
   transition: background-color 150ms ease, transform 200ms ease;
 }
+/* Cards keep their background on hover; the things inside them (titles, arrows) turn red instead. */
 .card-hover:hover {
-  background: var(--red-soft);
+  color: var(--accent);
 }
 
 /* Ad tiles lift slightly and the photo zooms in on hover. */
@@ -173,7 +174,6 @@ select {
   transition: transform 200ms ease, background-color 150ms ease;
 }
 .tile:hover {
-  background: var(--red-soft);
   transform: translateY(-3px);
 }
 .tile img {

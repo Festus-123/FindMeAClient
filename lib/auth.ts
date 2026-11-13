@@ -6,22 +6,31 @@ import fs from "node:fs";
 import path from "node:path";
 import { cache } from "react";
 import { GUEST_COOKIE, SESSION_COOKIE } from "./config";
-import { db } from "./db";
+import { db, syncDb } from "./db";
 import type { Role, User } from "./types";
 import { can, type Action } from "./permissions";
 
 const SESSION_MS = 7 * 24 * 60 * 60 * 1000;
 
 /** SESSION_SECRET from env, else a random secret persisted beside the data file. */
+let cachedSecret: string | undefined;
 function secret(): string {
   if (process.env.SESSION_SECRET) return process.env.SESSION_SECRET;
-  const dir = path.join(/*turbopackIgnore: true*/ process.cwd(), "data");
-  const file = path.join(dir, ".secret");
-  if (fs.existsSync(file)) return fs.readFileSync(file, "utf8");
-  fs.mkdirSync(dir, { recursive: true });
-  const s = randomBytes(32).toString("hex");
-  fs.writeFileSync(file, s);
-  return s;
+  if (cachedSecret) return cachedSecret;
+  try {
+    const dir = path.join(/*turbopackIgnore: true*/ process.cwd(), "data");
+    const file = path.join(dir, ".secret");
+    if (fs.existsSync(file)) return (cachedSecret = fs.readFileSync(file, "utf8"));
+    fs.mkdirSync(dir, { recursive: true });
+    const s = randomBytes(32).toString("hex");
+    fs.writeFileSync(file, s);
+    return (cachedSecret = s);
+  } catch {
+    // Read-only host (serverless): no file to keep a secret in. Derive a stable one from the database
+    // URL so every copy of the app signs the same way. Set SESSION_SECRET to use your own.
+    const seed = process.env.DATABASE_URL ?? process.env.TEST_DATABASE_URL ?? randomBytes(32).toString("hex");
+    return (cachedSecret = createHmac("sha256", "fmc-session").update(seed).digest("hex"));
+  }
 }
 
 const sign = (payload: string) => createHmac("sha256", secret()).update(payload).digest("hex");
@@ -44,6 +53,7 @@ export async function destroySession() {
 
 /** Current user for this request, or null. Re-reads the DB so suspensions apply immediately. */
 export const getUser = cache(async (): Promise<User | null> => {
+  await syncDb();
   const raw = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!raw) return null;
   const [userId, exp, mac] = raw.split(".");

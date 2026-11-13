@@ -1,12 +1,10 @@
 "use server";
 
-import fs from "node:fs";
-import path from "node:path";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireCan } from "@/lib/auth";
 import { AD_HOURS, CATEGORIES } from "@/lib/config";
-import { db, save, uid, UPLOAD_DIR } from "@/lib/db";
+import { db, removeUpload, save, storeUpload, uid } from "@/lib/db";
 import { createPayment } from "@/lib/payments";
 import { quoteAd, restorePrice } from "@/lib/pricing";
 import { activateAd, adsInCause, findAd } from "@/lib/service";
@@ -106,9 +104,8 @@ export async function createAd(_prev: FormState, fd: FormData): Promise<FormStat
     const ext = IMAGE_TYPES[file.type];
     if (!ext) return { error: "Images must be PNG, JPG or WebP." };
     if (file.size > MAX_IMAGE) return { error: "Images must be under 2 MB." };
-    fs.mkdirSync(UPLOAD_DIR, { recursive: true });
     image = `${uid()}.${ext}`;
-    fs.writeFileSync(path.join(/*turbopackIgnore: true*/ UPLOAD_DIR, image), Buffer.from(await file.arrayBuffer()));
+    await storeUpload(image, file.type, Buffer.from(await file.arrayBuffer()));
   }
 
   // No upload? A pasted link to an image works too.
@@ -186,7 +183,7 @@ export async function deleteAd(fd: FormData) {
   const store = db();
   store.ads = store.ads.filter((a) => a.id !== ad.id);
   store.threads = store.threads.filter((t) => t.adId !== ad.id);
-  if (ad.image && !/^https?:/.test(ad.image)) fs.rmSync(path.join(/*turbopackIgnore: true*/ UPLOAD_DIR, ad.image), { force: true });
+  if (ad.image && !/^https?:/.test(ad.image)) await removeUpload(ad.image);
   save();
   revalidatePath("/", "layout");
   redirect("/dashboard");

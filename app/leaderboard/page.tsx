@@ -13,13 +13,13 @@ export default function LeaderboardPage() {
   const clients = topClients();
 
   return (
-    <div className="fade-in space-y-10">
+    <div className="fade-in min-w-0 space-y-10">
       <header>
         <h1 className="text-2xl font-extrabold">Leaderboard</h1>
         <p className="mt-1 text-sm text-muted">Top 5 in each list. Ads move when they expire, client credits stay for the week.</p>
       </header>
 
-      <div className="grid gap-8 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-2 [&>*]:min-w-0">
         <AdBoard title="Most viewed today" rows={today} empty="No views yet today." />
         <AdBoard title="Most viewed live ads" rows={allTime} empty="No views yet." />
       </div>
@@ -27,7 +27,7 @@ export default function LeaderboardPage() {
       <section className="space-y-3">
         <div>
           <h2 className="text-lg font-extrabold">Clients this week</h2>
-          <p className="text-xs font-semibold text-muted">{weekKey()} · credits from views, applications and shares</p>
+          <p className="break-words text-xs font-semibold text-muted">{weekKey()} · credits from views, applications and shares</p>
         </div>
         {clients.length === 0 ? (
           <p className="text-sm text-muted">No credits yet this week.</p>
@@ -40,7 +40,7 @@ export default function LeaderboardPage() {
                   <span className="truncate">{c.user.name}</span>
                   {hasBadge(c.user) && <Badge />}
                 </span>
-                <span className="text-xs font-semibold text-muted">{c.activeAds} live</span>
+                <span className="shrink-0 text-xs font-semibold text-muted">{c.activeAds} live</span>
                 <span className="text-lg font-extrabold text-green">{c.score}</span>
               </li>
             ))}

@@ -149,13 +149,13 @@ export default function AdForm({ freeAdAvailable, causeCounts }: Props) {
   return (
     <form
       action={action}
-      className="grid gap-8 lg:grid-cols-[1fr_22rem]"
+      className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]"
       // Enter inside a field should never submit half a form.
       onKeyDown={(e) => {
         if (e.key === "Enter" && (e.target as HTMLElement).tagName === "INPUT") e.preventDefault();
       }}
     >
-      <div className="space-y-8">
+      <div className="min-w-0 space-y-8">
         {/* Stepper */}
         <ol className="grid grid-cols-5 gap-1">
           {STEPS.map((s, i) => (
@@ -428,7 +428,7 @@ export default function AdForm({ freeAdAvailable, causeCounts }: Props) {
           <div className="space-y-2 bg-surface p-5 text-sm">
             <p className="font-extrabold">What happens next</p>
             <ol className="space-y-1.5 text-muted">
-              <li className="flex gap-2"><Icon name="check" size={15} className="mt-0.5 text-green" /> {quote.ok && quote.total > 0 ? "You pay securely, then the ad goes live right away." : "Your ad goes live right away."}</li>
+              <li className="flex gap-2"><Icon name="check" size={15} className="mt-0.5 shrink-0 text-green" /> {quote.ok && quote.total > 0 ? "You pay securely, then the ad goes live right away." : "Your ad goes live right away."}</li>
               <li className="flex gap-2"><Icon name="eye" size={15} className="mt-0.5" /> Every signed-in user sees it at least once, and followers of {category || "your category"} get notified.</li>
               <li className="flex gap-2"><Icon name="mail" size={15} className="mt-0.5" /> Replies and applications reach your inbox and dashboard stats.</li>
               <li className="flex gap-2"><Icon name="clock" size={15} className="mt-0.5" /> After {hours} hours it ends. You then have 5 days to restore it for 40% of its price.</li>
@@ -438,7 +438,7 @@ export default function AdForm({ freeAdAvailable, causeCounts }: Props) {
 
         <ErrorMessage message={stepError || state.error} />
 
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <button type="button" onClick={() => go(step - 1)} disabled={step === 0} className="btn btn-soft">
             <Icon name="back" size={15} /> Back
           </button>
@@ -499,17 +499,17 @@ export default function AdForm({ freeAdAvailable, causeCounts }: Props) {
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between">
+    <div className="flex justify-between gap-3">
       <dt className="text-muted">{label}</dt>
-      <dd className="font-bold">{value}</dd>
+      <dd className="min-w-0 break-words text-right font-bold">{value}</dd>
     </div>
   );
 }
 
 function ReviewRow({ label, value, onEdit }: { label: string; value: string; onEdit: () => void }) {
   return (
-    <div className="flex items-center gap-4 px-4 py-3">
-      <dt className="w-24 shrink-0 text-xs font-extrabold uppercase tracking-wide text-muted">{label}</dt>
+    <div className="flex items-center gap-3 px-3 py-3 sm:gap-4 sm:px-4">
+      <dt className="w-20 shrink-0 sm:w-24 text-xs font-extrabold uppercase tracking-wide text-muted">{label}</dt>
       <dd className="min-w-0 flex-1 truncate font-semibold">{value}</dd>
       <button type="button" onClick={onEdit} className="text-xs font-bold text-accent">Edit</button>
     </div>

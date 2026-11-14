@@ -37,13 +37,13 @@ export function quoteAd(input: QuoteInput): Quote {
       ...empty,
     };
   }
-  // Ad n of a cause costs base * 2^(n-1): 1,000 → 2,000 → 4,000 → 8,000.
+  // Ad n of a cause costs base * 2^(n-1): $1 → $2 → $4 → $8.
   const exponential = PRICING.baseAd * 2 ** input.priorAdsInCause;
   const base = input.freeAdAvailable ? 0 : exponential;
   const cohostFee = input.cohostCount * PRICING.perCohost;
   const subtotal = base + cohostFee;
   const extraDays = input.hours / 24 - 1;
-  const extensionFee = round(subtotal * PRICING.extensionRatePerExtraDay * extraDays);
+  const extensionFee = round(PRICING.extensionPerExtraDay * extraDays);
   return { ok: true, base, cohostFee, extensionFee, total: subtotal + extensionFee };
 }
 
@@ -56,4 +56,6 @@ export function restorePrice(pricePaid: number): number {
   return round(Math.max(pricePaid * PRICING.restoreRate, floor));
 }
 
-export const naira = (n: number) => `₦${n.toLocaleString("en-NG")}`;
+/** Formats US cents: 100 → "$1", 185 → "$1.85". */
+export const usd = (cents: number) =>
+  `$${cents % 100 === 0 ? cents / 100 : (cents / 100).toFixed(2)}`;

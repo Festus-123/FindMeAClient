@@ -11,6 +11,10 @@ export interface User {
   suspended: boolean;
   /** Categories this user follows (employees get notified on new ads). */
   follows: string[];
+  /** Workers: send a notification when an ad in a followed category goes up (default on). */
+  notify?: boolean;
+  /** Workers: has finished the welcome questions. */
+  onboarded?: boolean;
   /** Subscription end (ms). Active while > now; grants the badge. */
   subscribedUntil: number;
   /** Clients: the first ad ever is free; flipped once it is used. */
@@ -52,7 +56,7 @@ export interface Ad {
   status: AdStatus;
   /** Chosen runtime: 24, 48, 72 or 96. */
   hours: number;
-  /** Total naira paid for the current run (used for the restore price). */
+  /** Total US cents paid for the current run (used for the restore price). */
   price: number;
   createdAt: number;
   /** Set when the ad goes live. */

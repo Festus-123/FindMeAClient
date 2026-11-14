@@ -3,12 +3,11 @@ import Icon, { CATEGORY_ICONS, type IconName } from "../_components/Icon";
 import PostAdButton from "../_components/PostAdButton";
 import { Badge } from "../_components/ui";
 import { toggleFollow } from "../actions/engage";
-import { startSubscription } from "../actions/pay";
 import { requireUser, hasBadge } from "@/lib/auth";
-import { CATEGORIES, PRICING } from "@/lib/config";
+import { CATEGORIES } from "@/lib/config";
 import { db, weekKey } from "@/lib/db";
 import { ago, timeLeft } from "@/lib/format";
-import { naira, restorePrice } from "@/lib/pricing";
+import { usd, restorePrice } from "@/lib/pricing";
 import type { Ad } from "@/lib/types";
 
 export default async function DashboardPage() {
@@ -41,16 +40,6 @@ export default async function DashboardPage() {
         <PostAdButton role={user.role} label={`Post an ad${client && !user.freeAdUsed ? " · first one free" : ""}`} />
       </header>
 
-      {!hasBadge(user) && (
-        <form action={startSubscription} className="flex flex-wrap items-center gap-4 bg-green-soft p-5">
-          <Icon name="medal" size={28} className="text-green" />
-          <div className="min-w-0 flex-1">
-            <p className="font-extrabold">Get your Pro badge</p>
-            <p className="text-sm text-muted">{naira(PRICING.subscriptionMonthly)} a month. Stand out next to your name.</p>
-          </div>
-          <button className="btn btn-green">Subscribe</button>
-        </form>
-      )}
 
       {client ? (
         <ClientView userId={user.id} week={week} score={user.scores[week] ?? 0} />
@@ -117,7 +106,7 @@ function ExpiredRow({ ad, owner }: { ad: Ad; owner: boolean }) {
           {ad.views} views · {ad.applies} applications · deleted in {daysLeft} day{daysLeft === 1 ? "" : "s"} · ended {ago(ad.expiresAt)}
         </p>
       </div>
-      <span className="text-sm font-bold text-red">{owner ? `Restore for ${naira(restorePrice(ad.price))}` : "View"}</span>
+      <span className="text-sm font-bold text-red">{owner ? `Restore for ${usd(restorePrice(ad.price))}` : "View"}</span>
     </Link>
   );
 }

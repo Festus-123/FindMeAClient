@@ -2,7 +2,8 @@
 
 import { redirect } from "next/navigation";
 import { randomBytes, timingSafeEqual } from "node:crypto";
-import { createSession, destroySession } from "@/lib/auth";
+import { createSession, destroySession, requireUser } from "@/lib/auth";
+import { CATEGORIES } from "@/lib/config";
 import { db, hashPassword, save, syncDb, uid } from "@/lib/db";
 
 export interface FormState {
@@ -53,7 +54,9 @@ export async function register(_prev: FormState, formData: FormData): Promise<Fo
   });
   save();
   await createSession(id);
-  redirect(safeNext(formData.get("next")));
+  const next = safeNext(formData.get("next"));
+  // Workers answer a few questions first so their feed is theirs from the start.
+  redirect(role === "employee" ? `/welcome?next=${encodeURIComponent(next)}` : next);
 }
 
 export async function login(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -77,4 +80,15 @@ export async function login(_prev: FormState, formData: FormData): Promise<FormS
 export async function logout() {
   await destroySession();
   redirect("/");
+}
+
+/** Saves the worker's welcome answers: which kinds of clients they want and whether to be notified. */
+export async function saveOnboarding(formData: FormData) {
+  const user = await requireUser();
+  const picked = formData.getAll("category").map(String).filter((c) => (CATEGORIES as readonly string[]).includes(c));
+  user.follows = [...new Set(picked)];
+  user.notify = formData.get("notify") === "on";
+  user.onboarded = true;
+  save();
+  redirect(safeNext(formData.get("next")));
 }

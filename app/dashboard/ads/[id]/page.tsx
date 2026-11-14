@@ -5,7 +5,7 @@ import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { ago, timeLeft } from "@/lib/format";
 import { canPayOrDelete, canSeeAdStats } from "@/lib/permissions";
-import { naira, restorePrice } from "@/lib/pricing";
+import { usd, restorePrice } from "@/lib/pricing";
 import { findAd, findUser } from "@/lib/service";
 
 export default async function ManageAdPage({ params }: { params: Promise<{ id: string }> }) {
@@ -53,7 +53,7 @@ export default async function ManageAdPage({ params }: { params: Promise<{ id: s
 
       {ad.status === "pending_payment" && owner && pendingPay && (
         <Link href={`/pay/${pendingPay.ref}`} className="btn btn-blue w-full">
-          Pay {naira(pendingPay.amount)} to put this ad up
+          Pay {usd(pendingPay.amount)} to put this ad up
         </Link>
       )}
 
@@ -62,7 +62,7 @@ export default async function ManageAdPage({ params }: { params: Promise<{ id: s
           <h2 className="font-extrabold">This ad has ended</h2>
           <p className="text-sm">
             It will be deleted in {daysLeft} day{daysLeft === 1 ? "" : "s"}. Restoring brings it back for {ad.hours} hours
-            {owner ? ` for ${naira(restorePrice(ad.price))}.` : "."}
+            {owner ? ` for ${usd(restorePrice(ad.price))}.` : "."}
           </p>
           {owner ? (
             <div className="flex flex-wrap gap-2">

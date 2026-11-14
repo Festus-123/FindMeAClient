@@ -34,7 +34,7 @@ export function activateAd(ad: Ad) {
   ad.purgeAt = ad.expiresAt + GRACE_MS;
   ad.deliveredTo = [];
   for (const u of db().users) {
-    if (u.role !== "admin" && !u.suspended && u.id !== ad.ownerId && u.follows.includes(ad.category)) {
+    if (u.role !== "admin" && !u.suspended && u.id !== ad.ownerId && u.notify !== false && u.follows.includes(ad.category)) {
       notify(u.id, `New ${ad.category} ad: ${ad.title}`, `/ads/${ad.id}`);
     }
   }

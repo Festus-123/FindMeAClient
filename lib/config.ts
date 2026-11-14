@@ -1,22 +1,22 @@
 /**
  * Every business number lives here so pricing can be tuned without touching logic.
- * Amounts are in naira.
+ * Amounts are in US cents (integers): 185 = $1.85.
  */
 export const PRICING = {
   /** Price of the first ad for a cause. Each further ad for the same cause doubles. */
-  baseAd: 1_000,
+  baseAd: 100,
   /** Max ads a client can run for a single cause. */
   maxAdsPerCause: 4,
-  /** Extra charge per additional host on an ad (ASSUMPTION: not specified in the pitch). */
-  perCohost: 500,
+  /** Co-hosting is free. */
+  perCohost: 0,
   /** Max additional hosts (an ad can be hosted by 2 or 3 people in total). */
   maxCohosts: 2,
-  /** Surcharge per extra 24h block beyond the first, as a share of the ad cost (ASSUMPTION: "6%"). */
-  extensionRatePerExtraDay: 0.06,
+  /** Flat surcharge per extra 24h beyond the first: $1 → $1.85 → $2.70 → $3.55. */
+  extensionPerExtraDay: 85,
   /** Restoring an expired ad costs this share of what the ad cost. */
   restoreRate: 0.4,
   /** Monthly subscription (client or employee) that unlocks the badge. */
-  subscriptionMonthly: 1_000,
+  subscriptionMonthly: 100,
 } as const;
 
 export const AD_HOURS = [24, 48, 72, 96] as const;

@@ -4,7 +4,9 @@ import PostAdButton from "./_components/PostAdButton";
 import RankBadge from "./_components/RankBadge";
 import Icon, { CATEGORY_ICONS } from "./_components/Icon";
 import { getUser } from "@/lib/auth";
-import { CATEGORIES } from "@/lib/config";
+import Logo from "./_components/Logo";
+import { AD_HOURS, CATEGORIES, PRICING } from "@/lib/config";
+import { usd } from "@/lib/pricing";
 import { buildFeed } from "@/lib/feed";
 import { topAds } from "@/lib/service";
 
@@ -48,13 +50,14 @@ export default async function FeedPage({
         </div>
         <div className="relative max-w-2xl px-6 py-12 sm:px-10 sm:py-16">
           <p className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.2em]">
-            <Icon name="flame" size={16} /> Live for 24 hours or more
+            <Icon name="flame" size={16} /> First ad free · $1 after that
           </p>
           <h1 className="mt-4 text-4xl font-extrabold leading-[1.05] sm:text-6xl">
-            Post it today.<br />Meet the people <span className="text-red">who want it.</span>
+            Got work? Got skills?<br />Meet your <span className="text-red">client.</span>
           </h1>
           <p className="mt-5 max-w-lg text-base opacity-80">
-            Jobs, roles and services from real clients. Browse {liveCount} live ad{liveCount === 1 ? "" : "s"} below, or put your own in front of the right people.
+            Someone has the money and the work but not the hands. Someone has the hands but not the work.
+            Here, each is the other&apos;s client. {liveCount} live ad{liveCount === 1 ? "" : "s"} below.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <PostAdButton role={user?.role ?? "guest"} className="btn bg-paper text-ink hover:bg-red hover:text-white" />
@@ -127,6 +130,41 @@ export default async function FeedPage({
           </div>
         </aside>
       </div>
+
+      <section aria-label="How it works" className="grid gap-5 md:grid-cols-2">
+        <div className="space-y-4 bg-surface p-7">
+          <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-blue">Have work to give</p>
+          <h2 className="text-2xl font-extrabold">Post an ad, get replies</h2>
+          <ol className="space-y-2 text-sm text-muted">
+            <li><b className="text-ink">1.</b> Join and describe the job: title, photo, location or fully remote, how to apply.</li>
+            <li><b className="text-ink">2.</b> Post it. Your first ad is free, after that it is {usd(PRICING.baseAd)}.</li>
+            <li><b className="text-ink">3.</b> Watch views, clicks and replies, and get notified when someone responds.</li>
+          </ol>
+        </div>
+        <div className="space-y-4 bg-surface p-7">
+          <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-green">Have a skill to offer</p>
+          <h2 className="text-2xl font-extrabold">Tell us what you do, get the feed</h2>
+          <ol className="space-y-2 text-sm text-muted">
+            <li><b className="text-ink">1.</b> Join free and pick the kinds of clients you want.</li>
+            <li><b className="text-ink">2.</b> Your feed fills with fresh ads. Anything you see is recent.</li>
+            <li><b className="text-ink">3.</b> Apply and agree payment directly. We never sit in the middle of your money.</li>
+          </ol>
+        </div>
+      </section>
+
+      <section aria-label="Pricing" className="bg-ink p-7 text-on-ink sm:p-10">
+        <h2 className="text-2xl font-extrabold sm:text-3xl">Simple pricing, in dollars</h2>
+        <p className="mt-2 max-w-xl text-sm opacity-80">Joining is free for everyone. You only pay to put an ad up, and these are all the charges.</p>
+        <dl className="mt-6 grid gap-px sm:grid-cols-3">
+          <div className="bg-paper/10 p-5"><dt className="text-xs font-extrabold uppercase tracking-wide opacity-70">First ad</dt><dd className="mt-1 text-3xl font-extrabold text-green">Free</dd><dd className="text-sm opacity-70">then {usd(PRICING.baseAd)} each ad</dd></div>
+          <div className="bg-paper/10 p-5"><dt className="text-xs font-extrabold uppercase tracking-wide opacity-70">Repeat ads, same cause</dt><dd className="mt-1 text-3xl font-extrabold">{[0, 1, 2, 3].map((n) => usd(PRICING.baseAd * 2 ** n)).join(" · ")}</dd><dd className="text-sm opacity-70">up to {PRICING.maxAdsPerCause} ads</dd></div>
+          <div className="bg-paper/10 p-5"><dt className="text-xs font-extrabold uppercase tracking-wide opacity-70">Longer run</dt><dd className="mt-1 text-3xl font-extrabold">+{usd(PRICING.extensionPerExtraDay)}</dd><dd className="text-sm opacity-70">per extra day, up to {AD_HOURS[AD_HOURS.length - 1]} hrs</dd></div>
+        </dl>
+      </section>
+
+      <p className="pb-4 text-center text-sm font-semibold text-muted">
+        <Logo /> · for both sides, the other is their client.
+      </p>
     </div>
   );
 }

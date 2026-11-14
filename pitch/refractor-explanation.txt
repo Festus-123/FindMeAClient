@@ -1,0 +1,43 @@
+so far finemeaclient has been going well 
+
+we need to make imporvments 
+1. it is not limited to nigeria so the 1000 naira payment of a thing neds to change to dollar
+
+let me explain the task with a scenario 
+
+a client and a worker 
+findmeaclient is built for people out there that ave something they need to get done 
+they have the funds and the work just laying there and someone out there with the skill
+to get the job done and needs the instant pay find me a client connects them simply 
+
+a client enters the platform to find someone that could get the job done.. maybe a website for 
+a ceremony 
+then they sign up or join rather as findmeaworker then they become an employer (client)
+they go ahead to create their ad to tell people about the work they need done...
+add couple of items like image, location (fully remote) description, mode of application
+    title, details and all other sor of relevant info
+post the ad at a cost of 1 dollar and (no more first ad is free) and then await a notification
+when a worker or employee respond to the ad the client get an update 
+in their profile they get to see no of views, engaement, impressions clicked etc and replies 
+(if they specify to recive message via the platform) 
+the platform dosen't do the payment midleman and all that would conducted via their medium
+
+a worker signs up as find me a client, is taking through an onboarding screen that collects 
+certain details to help determine how his feed would be (what type of client, should the 
+platform notify them on any update etc)
+
+for the payment 
+now that we arent using the 1000 naira anymore what payment platform would you suggest?
+as worker or employer(client) sign up or registering is free. create an ad cost a ollar
+for the co ad like 2 to 4 ads of the same cause the exponent set up remains 
+and for extending time the chrges just increases eg 1 dollar for an add increasing the 
+    durration would now cost like 1.85 then anotherr increase could be going 2.65 (+0.85)
+    up to 4 ad max 
+thats all the charges 
+
+
+but when building don't forget the why
+"someone out there has money and needs to get something done but dosen't know how 
+and someone out ther has the means to get it done but don't have money" 
+find me a client 
+    for both of them the other is their CLIENT 

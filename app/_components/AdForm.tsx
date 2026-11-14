@@ -4,7 +4,7 @@ import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { createAd } from "../actions/ads";
 import type { FormState } from "../actions/auth";
 import { AD_HOURS, CATEGORIES, DETAIL_PRESETS, PRICING } from "@/lib/config";
-import { naira, quoteAd } from "@/lib/pricing";
+import { usd, quoteAd } from "@/lib/pricing";
 import Icon, { CATEGORY_ICONS, type IconName } from "./Icon";
 import { ErrorMessage, Select, SubmitButton } from "./ui";
 
@@ -376,7 +376,7 @@ export default function AdForm({ freeAdAvailable, causeCounts }: Props) {
           <div>
             <label htmlFor="cohosts" className="mb-1.5 flex items-center gap-2 text-sm font-bold"><Icon name="users" size={15} /> Co-host emails <span className="font-medium text-muted">(optional)</span></label>
             <input id="cohosts" name="cohosts" value={cohostText} onChange={(e) => setCohostText(e.target.value)} placeholder="partner@company.com, other@company.com" className="field" />
-            <p className="mt-1 text-xs text-muted">Up to {PRICING.maxCohosts} other clients can host with you. You pay for the ad.</p>
+            <p className="mt-1 text-xs text-muted">Up to {PRICING.maxCohosts} other clients can host with you, at no extra cost.</p>
           </div>
 
           <div>
@@ -412,12 +412,12 @@ export default function AdForm({ freeAdAvailable, causeCounts }: Props) {
             <h3 className="text-lg font-extrabold">Price</h3>
             {quote.ok ? (
               <dl className="space-y-1 text-sm">
-                <Row label={freeAdAvailable ? "Your first ad" : "Ad for this cause"} value={quote.base === 0 ? "Free" : naira(quote.base)} />
-                {quote.cohostFee > 0 && <Row label={`Co-hosts (${cohostCount})`} value={naira(quote.cohostFee)} />}
-                {quote.extensionFee > 0 && <Row label={`Extended to ${hours} hrs`} value={naira(quote.extensionFee)} />}
+                <Row label={freeAdAvailable ? "Your first ad" : "Ad for this cause"} value={quote.base === 0 ? "Free" : usd(quote.base)} />
+                {quote.cohostFee > 0 && <Row label={`Co-hosts (${cohostCount})`} value={usd(quote.cohostFee)} />}
+                {quote.extensionFee > 0 && <Row label={`Extended to ${hours} hrs`} value={usd(quote.extensionFee)} />}
                 <div className="flex justify-between pt-2 text-base font-extrabold">
                   <dt>Total</dt>
-                  <dd className={quote.total === 0 ? "text-green" : ""}>{quote.total === 0 ? "Free" : naira(quote.total)}</dd>
+                  <dd className={quote.total === 0 ? "text-green" : ""}>{quote.total === 0 ? "Free" : usd(quote.total)}</dd>
                 </div>
               </dl>
             ) : (
@@ -448,7 +448,7 @@ export default function AdForm({ freeAdAvailable, causeCounts }: Props) {
             </button>
           ) : (
             <SubmitButton pendingText="Creating…">
-              {quote.ok && quote.total > 0 ? `Continue to payment (${naira(quote.total)})` : "Put the ad up"}
+              {quote.ok && quote.total > 0 ? `Continue to payment (${usd(quote.total)})` : "Put the ad up"}
             </SubmitButton>
           )}
         </div>

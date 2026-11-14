@@ -3,7 +3,7 @@ import { confirmTestPayment } from "../../actions/pay";
 import { SubmitButton } from "../../_components/ui";
 import { requireUser } from "@/lib/auth";
 import { findPayment, provider } from "@/lib/payments";
-import { naira } from "@/lib/pricing";
+import { usd } from "@/lib/pricing";
 import { findAd } from "@/lib/service";
 
 const LABEL = {
@@ -30,12 +30,12 @@ export default async function PayPage({ params }: { params: Promise<{ ref: strin
       </header>
       <div className="card space-y-1 text-center">
         <p className="text-xs font-bold uppercase tracking-wide text-muted">Amount due</p>
-        <p className="text-4xl font-extrabold">{naira(payment.amount)}</p>
+        <p className="text-4xl font-extrabold">{usd(payment.amount)}</p>
       </div>
       {canConfirm ? (
         <form action={confirmTestPayment} className="space-y-3">
           <input type="hidden" name="ref" value={payment.ref} />
-          <SubmitButton className="btn btn-green w-full" pendingText="Confirming…">Pay {naira(payment.amount)} (test mode)</SubmitButton>
+          <SubmitButton className="btn btn-green w-full" pendingText="Confirming…">Pay {usd(payment.amount)} (test mode)</SubmitButton>
           <p className="text-center text-xs font-semibold text-muted">
             Test mode: no money moves. A live payment provider needs to be connected before launch.
           </p>

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { removeAd, toggleSuspend } from "../actions/admin";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { naira } from "@/lib/pricing";
+import { usd } from "@/lib/pricing";
 import { findUser, isLive } from "@/lib/service";
 
 export default async function AdminPage() {
@@ -21,7 +21,7 @@ export default async function AdminPage() {
           ["Users", users.length],
           ["Live ads", store.ads.filter(isLive).length],
           ["Applications", store.threads.length],
-          ["Revenue", naira(revenue)],
+          ["Revenue", usd(revenue)],
         ].map(([label, value]) => (
           <div key={label} className="card">
             <p className="text-2xl font-extrabold">{value}</p>
